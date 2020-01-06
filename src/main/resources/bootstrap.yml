@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: WeChatArticle
+  profiles:
+    # 启用配置中心后，springconfig.cloud.config.profile 会优先于 springconfig.profiles.active
+    active: dev
+

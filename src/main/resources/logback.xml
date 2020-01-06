@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+    <!-- SpringBoot 项目中 logback 日志配置文件若命名为 logback.xml，加载会早于 application.yml 等文件，无法读取相关信息 -->
+    <!-- 因此无法使用 springProperty 和 springProfile，因此建议日志配置文件命名以 -springconfig 结尾，如 logback-springconfig.xml -->
+
+    <springProperty name="APPLICATION_NAME" source="spring.application.name" />
+    <springProperty name="APPLICATION_PROFILE" source="spring.profiles.active" defaultValue="dev" />
+
+
+    <!-- 文件输出格式 -->
+    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS XXX}){blue} %X{客户端主机名} %X{访问URI} %X{访问URL} %X{请求方式} %X{URL参数} %X{req.userAgent} %X{req.xForwardedFor} %clr(${LOG_LEVEL_PATTERN:-%-5level}) %clr(${PID:- }){magenta}-%clr([%-12thread]){bright magenta} %clr(%-40logger{40}){cyan} %clr(:){faint} %msg%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
+    <!--<property name="CONSOLE_LOG_PATTERN" value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS XXX}){blue} %X{req.remoteHost} %X{req.requestURI} %X{req.requestURL} %X{req.method} %X{req.queryString} %X{req.userAgent} %X{req.xForwardedFor} %clr(${LOG_LEVEL_PATTERN:-%-5level}) %clr(${PID:- }){magenta}-%clr([%-12thread]){bright magenta} %clr(%-40logger{39}){cyan} %clr(:){faint} %msg%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />-->
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS XXX} %X{客户端主机名} %X{访问URI} %X{访问URL} %X{请求方式} %X{URL参数} %X{req.userAgent} %X{req.xForwardedFor} ${LOG_LEVEL_PATTERN:-%-5level} ${PID:- }-[%-12thread] %-40logger{40} : %msg%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
+    <!-- 文件最大保存历史数量 -->
+    <property name="ROLLING_FILE_MAX_HISTORY" value="31" />
+    <property name="ROLLING_FILE_MAX_FILE_SIZE" value="10MB" />
+    <property name="ROLLING_FILE_TOTAL_SIZE_CAP" value="500MB" />
+    <!-- 时间时区信息 -->
+    <property name="TIME_ZONE_ID" value="Asia/Shanghai" />
+    <!-- PatternLayoutEncoder 输出字符集编码 -->
+    <property name="ENCODER_CHARSET" value="UTF-8" />
+
+
+    <!-- 通过 WebHook 关闭 logback -->
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+
+    <!-- 通过JMX以HTTP的方式动态管理Logback的配置 -->
+    <jmxConfigurator/>
+
+    <!-- 修改自 org.springframework.boot:springconfig-boot 中 org/springframework/boot/logging/logback/base.xml -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+    <!--<property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/springconfig.log}"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <include resource="org/springframework/boot/logging/logback/file-appender.xml" />-->
+
+    <!-- 控制台 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+    </appender>
+
+    <!-- 输出到文件，修改自 org/springframework/boot/logging/logback/file-appender.xml -->
+    <appender name="CONSOLE-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+        <file>${APPLICATION_NAME}-logs/console.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${APPLICATION_NAME}-logs/console-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <maxFileSize>${ROLLING_FILE_MAX_FILE_SIZE}</maxFileSize>
+            <totalSizeCap>${ROLLING_FILE_TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- ERROR 日志 -->
+    <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${APPLICATION_NAME}-logs/error/error-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder immediateFlush="false">
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+        <!-- 只打印 ERROR 日志 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- WARN 日志 -->
+    <appender name="WARN" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${APPLICATION_NAME}-logs/warn/warn-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder immediateFlush="false">
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+        <!-- 只打印 WARN 日志 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- INFO 日志 -->
+    <appender name="INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${APPLICATION_NAME}-logs/info/info-%d{yyyy-MM-dd}.log</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>${ENCODER_CHARSET}</charset>
+        </encoder>
+        <!-- 只打印 INFO 日志 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+
+    <!-- 下面日志输出配置，目标是控制台输出所有 INFO 级别以上的日志，同步记录到控制台日志文件上；
+         INFO、WARN、ERROR 级别日志再分别单独写入文件；
+         对于 com.fesco.micro 包内的日志，还会发送到 REDIS，其他包的日志 REDIS 只记录 WARN 和 ERROR -->
+
+    <!-- 记录所有实体，不包含引入的其他包 -->
+    <logger name="com.bdf.wechatarticle" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="CONSOLE-FILE"/>
+        <appender-ref ref="INFO"/>
+        <appender-ref ref="WARN"/>
+        <appender-ref ref="ERROR"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="CONSOLE-FILE"/>
+        <appender-ref ref="INFO"/>
+        <appender-ref ref="WARN"/>
+        <appender-ref ref="ERROR"/>
+    </root>
+</configuration>

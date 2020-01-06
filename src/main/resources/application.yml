@@ -1,0 +1,39 @@
+
+# jdbc_config   datasource
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    # Hikari will use the above plus the following to setup connection pooling
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 15
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: DatebookHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+mybatis:
+  page:
+    defaultPageSize: 10
+    maxPageSize: 100
+# swagger 配置
+swagger:
+  ui:
+    base-package: com.bdf.wechatartice
+    info:
+      title: 应用接口文档
+      description: API 接口文档
+      version: 1.0
+      contact:
+        name: 张强
+        url: ~
+        email: zq15302026066@163.com
+
+micro:
+  base:
+    lock:
+      global-semaphore-permits: 100
+      distributed-lock-prefix: 'wechatarticle'
